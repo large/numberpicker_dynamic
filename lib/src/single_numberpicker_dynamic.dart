@@ -27,9 +27,6 @@ class SingleNumberPicker extends StatefulWidget {
   /// A callback function that is called when the user selects a new value.
   final ValueChanged<NumberPickerPosition> onValueSelected;
 
-  /// The width of the picker.
-  final double pickerWidth;
-
   /// The extent of each item in the picker.
   final double itemExtent;
 
@@ -70,8 +67,7 @@ class SingleNumberPicker extends StatefulWidget {
     required this.onValueSelected,
     this.selectedTextStyle,
     this.unselectedTextStyle,
-    this.pickerWidth = 40,
-    this.itemExtent = 60,
+    this.itemExtent = 80,
     this.diameterRatio = 2.5,
     this.perspective = 0.005,
     this.initialSelectedIndex,
@@ -99,21 +95,23 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   /// The notifier for the currently selected index.
   late ValueNotifier<int> _selectedIndexNotifier;
 
-  /// Timer for handling zero timeout
-  Timer? _timer;
+  /// The current selection
+  //int _currentIndex = -1;
 
-  @override
+  /*@override
   void didUpdateWidget(covariant SingleNumberPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     //Update selection on change
-    if (oldWidget.initialSelectedIndex != widget.initialSelectedIndex ||
-        widget.initialSelectedIndex == 0) {
+    /*if ( (oldWidget.initialSelectedIndex != widget.initialSelectedIndex ||
+        widget.initialSelectedIndex == 0)
+        ) {
+      debugPrint("Jalalalal");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollController.jumpToItem(widget.initialSelectedIndex ?? 0);
       });
-    }
-  }
+    }*/
+  }*/
 
   @override
   /// Initializes the state of the HorizontalPicker widget.
@@ -130,16 +128,41 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
       initialItem: _selectedIndexNotifier.value,
     );
 
+    //Store current value
+    //_currentIndex = _selectedIndexNotifier.value;
+
     // Add a post-frame callback to notify the parent widget of the initial selected value.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onValueSelected(
-        NumberPickerPosition(
-          value: widget.values[_selectedIndexNotifier.value],
-          isDecimal: widget.isDecimal,
-          position: widget.numberPosition,
-        ),
-      );
+    /*WidgetsBinding.instance.addPostFrameCallback((_) {
+    });*/
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      //Ensure to trigger when scrolling has stopped
+      _scrollController.position.isScrollingNotifier.addListener(scrollStopped);
+      //_triggerValueSelected();
     });
+  }
+
+  ///
+  /// Internal helper for triggering callback of value, position and decimal
+  void _triggerValueSelected()
+  {
+    widget.onValueSelected(
+      NumberPickerPosition(
+        value: widget.values[_selectedIndexNotifier.value],
+        isDecimal: widget.isDecimal,
+        position: widget.numberPosition,
+      ),
+    );
+  }
+
+  ///
+  /// Callback function when scrolling is started / stopped
+  void scrollStopped()
+  {
+    if(!_scrollController.position.isScrollingNotifier.value) {
+      //debugPrint('scroll is stopped');
+      _triggerValueSelected();
+    }
   }
 
   @override
@@ -147,18 +170,14 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   ///
   /// This method is called when the widget is removed from the tree.
   void dispose() {
+    //Remove listener on scroller
+    _scrollController.removeListener(scrollStopped);
+
     // Dispose of the scroll controller.
     _scrollController.dispose();
 
     // Dispose of the selected index notifier.
     _selectedIndexNotifier.dispose();
-
-    //Cancel timer and delete
-    if(_timer != null)
-    {
-      _timer!.cancel();
-      _timer = null;
-    }
 
     super.dispose();
   }
@@ -182,85 +201,67 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   Widget build(BuildContext context) {
     // Center the picker horizontally and vertically
     return Center(
-      child: Container(
-        color: Colors.cyan,
-        child: SizedBox(
-          // Set the height of the picker
-          width: widget.pickerWidth,
-          child: ListWheelScrollView.useDelegate(
-            // Set the scroll controller for the picker
-            controller: _scrollController,
-            // Set the physics for the scroll view
-            // This ensures that it will select nearest object
-            physics: const FixedExtentScrollPhysics(),
-            // Set the extent of each item in the list
-            itemExtent: widget.itemExtent,
-            // Set the diameter ratio for the scroll view
-            diameterRatio: widget.diameterRatio,
-            // Set the perspective for the scroll view
-            perspective: widget.perspective,
-            // Handle changes to the selected item
-            onSelectedItemChanged: (index) {
-              // Check if the new index is the same as the current index
-              if (_selectedIndexNotifier.value == index) {
-                return;
-              }
-              // Update the selected index notifier
-              debugPrint("was ${_selectedIndexNotifier.value} change to $index");
-              _selectedIndexNotifier.value = index;
+      child: ListWheelScrollView.useDelegate(
+        // Set the scroll controller for the picker
+        controller: _scrollController,
+        // Set the physics for the scroll view
+        // This ensures that it will select nearest object
+        physics: const FixedExtentScrollPhysics(),
+        // Set the extent of each item in the list
+        itemExtent: widget.itemExtent,
+        // Set the diameter ratio for the scroll view
+        diameterRatio: widget.diameterRatio,
+        // Set the perspective for the scroll view
+        perspective: widget.perspective,
+        // Handle changes to the selected item
+        onSelectedItemChanged: (index) {
+          // Check if the new index is the same as the current index
+          if (_selectedIndexNotifier.value == index) return;
 
-              // Call the onValueSelected callback with the new selected value
-              widget.onValueSelected(
-                NumberPickerPosition(
-                  isDecimal: widget.isDecimal,
-                  value: widget.values[index],
-                  position: widget.numberPosition,
-                ),
-              );
-            },
-            // Build the child delegate for the list wheel scroll view
-            childDelegate: ListWheelChildBuilderDelegate(
-              // Build each item in the list
-              builder: (context, index) {
-                // Check if the index is out of range
-                if (index < 0 || index >= widget.values.length) return null;
+          //Store the current selection
+          _selectedIndexNotifier.value = index;
+        },
+        // Build the child delegate for the list wheel scroll view
+        childDelegate: ListWheelChildBuilderDelegate(
+          // Build each item in the list
+          builder: (context, index) {
+            // Check if the index is out of range
+            if (index < 0 || index >= widget.values.length) return null;
 
-                return Center(
-                  child: ValueListenableBuilder(
-                    // Listen to the selected index notifier
-                    valueListenable: _selectedIndexNotifier,
-                    // Build the item based on whether it's selected
-                    builder: (context, selectedIndex, child) {
-                      // Check if the item is selected
-                      final isSelected = index == selectedIndex;
-                      return Container(
-                        // Set the decoration and padding based on whether the item is selected
-                        decoration:
-                            isSelected
-                                ? widget.selectedItemDecoration
-                                : widget.unselectedItemDecoration,
-                        padding:
-                            isSelected
-                                ? widget.selectedItemPadding
-                                : widget.unSelectedItemPadding,
-                        child: Text(
-                          // Display the value of the item
-                          widget.values[index].toString(),
-                          // Get the text style based on whether the item is selected
-                          style: _getTextStyle(isSelected),
-                          // Set the max lines and overflow for the text
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-              // Set the child count for the list wheel scroll view
-              childCount: widget.values.length,
-            ),
-          ),
+            return Center(
+              child: ValueListenableBuilder(
+                // Listen to the selected index notifier
+                valueListenable: _selectedIndexNotifier,
+                // Build the item based on whether it's selected
+                builder: (context, selectedIndex, child) {
+                  // Check if the item is selected
+                  final isSelected = index == selectedIndex;
+                  return Container(
+                    // Set the decoration and padding based on whether the item is selected
+                    decoration:
+                        isSelected
+                            ? widget.selectedItemDecoration
+                            : widget.unselectedItemDecoration,
+                    padding:
+                        isSelected
+                            ? widget.selectedItemPadding
+                            : widget.unSelectedItemPadding,
+                    child: Text(
+                      // Display the value of the item
+                      widget.values[index].toString(),
+                      // Get the text style based on whether the item is selected
+                      style: _getTextStyle(isSelected),
+                      // Set the max lines and overflow for the text
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+          // Set the child count for the list wheel scroll view
+          childCount: widget.values.length,
         ),
       ),
     );

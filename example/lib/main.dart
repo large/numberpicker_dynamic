@@ -13,7 +13,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Dynamic Number Picker',
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      themeMode: ThemeMode.dark,
       theme: ThemeData(
+        useMaterial3: true,
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see
@@ -29,7 +32,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
       ),
       home: const MyHomePage(title: 'Dynamic Number Picker'),
     );
@@ -55,7 +58,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  num _value = 0;
+  num _value = 48.4;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: NumberPickerDynamic(
-                  initValue: 48.781259,
+                  initValue: _value,
                   onValueChange: (value) {
                     debugPrint("Value is $value");
                     setState(() {
@@ -116,25 +119,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   _value++;
                 });
 
-              }, child: Text("Number is higher"))
-              /*NumberPickerDynamic(
-                value: _value,
-                minValue: 0,
-                maxValue: 9,
-                step: 1,
-                itemHeight: 50,
-                itemWidth: 50,
-                axis: Axis.vertical,
-                onChanged: (value) {
-                  setState(() {
-                    _value = value;
-                  });
-                },
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black26),
-                ),
-              ),*/
+              }, child: Text("Increase the value higher")),
+              TextButton(onPressed: () {
+                setState(() {
+                  _value--;
+                  if(_value<0) _value = 0;
+                });
+
+              }, child: Text("Decrease the value lower")),
+              TextButton(onPressed: () {
+                setState(() {
+                  _value+=0.1;
+                });
+
+              }, child: Text("Increase decimal")),
+              TextButton(onPressed: () {
+                setState(() {
+                  _value-=0.1;
+                  if(_value<0) _value = 0;
+                });
+
+              }, child: Text("Decrease decimal"))
             ],
           ),
         ),
