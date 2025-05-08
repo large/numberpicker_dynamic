@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:numberpicker_dynamic/numberpicker_dynamic.dart';
 
 import 'numberpicker_model.dart';
@@ -20,6 +20,8 @@ class NumberPickerDynamic extends StatefulWidget {
     this.textStyle,
     this.textPadding,
     this.textSelectDecoration,
+    this.maxDecimals = 6,
+    this.maxFractions = 12,
   });
 
   final TextStyle? textStyle;
@@ -34,6 +36,8 @@ class NumberPickerDynamic extends StatefulWidget {
   final double itemWidth;
   final double itemExtent;
   final ValueChanged<num> onValueChange;
+  final int maxDecimals;
+  final int maxFractions;
 
   @override
   State<NumberPickerDynamic> createState() => _NumberPickerDynamicState();
@@ -48,7 +52,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   @override
   void initState() {
     super.initState();
-    createByNum(widget.initValue);
+    createByNum(roundDouble(widget.initValue, widget.maxDecimals));
   }
 
   @override
@@ -59,18 +63,19 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     //If the initValue is not the same, update it
     //This ensure that when setState is triggered a new value is stored
     if (oldWidget.initValue != widget.initValue) {
-      updateByNum(widget.initValue);
+      updateByNum(roundDouble(widget.initValue, widget.maxDecimals));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.itemHeight,
-      width: widget.itemWidth,
-      child: Container(
-        color:
-            widget.background ?? Theme.of(context).colorScheme.surfaceContainer,
+    //Set textscale to max 40% oversize
+    return MediaQuery.withClampedTextScaling(
+      minScaleFactor: 1.0,
+      maxScaleFactor: 1.4,
+      child: SizedBox(
+        height: widget.itemHeight,
+        width: widget.itemWidth,
         child: Center(
           child: ListView.builder(
             //To have center effect shrinkWrap needs to be true
@@ -228,84 +233,65 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Material(
-          color: Colors.transparent,
-          child: Ink(
-            decoration: ShapeDecoration(
-              color:
-                  widget.buttonBackground ??
-                  Theme.of(context).colorScheme.tertiaryContainer,
-              shape: CircleBorder(),
-            ),
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  if (fraction) {
-                    _fractions.insert(0, 0);
-                  } else {
-                    _decimals.add(0);
+        if (fraction && _fractions.length < widget.maxFractions ||
+            !fraction && _decimals.length < widget.maxDecimals)
+        IconButton.filled(
+          onPressed: () {
+            setState(() {
+              if (fraction) {
+                if(_fractions.length < widget.maxFractions) _fractions.insert(0, 0);
+              } else {
+                if(_decimals.length < widget.maxDecimals) _decimals.add(0);
 
-                    //Do scrolling after frame is finished
-                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                      //Scroll to the end
-                      _scrollController.animateTo(
-                        _scrollController.position.maxScrollExtent,
-                        duration: Duration(milliseconds: 250),
-                        curve: Curves.ease,
-                      );
-                    });
-                  }
+                //Do scrolling after frame is finished
+                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                  //Scroll to the end
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent,
+                    duration: Duration(milliseconds: 250),
+                    curve: Curves.ease,
+                  );
                 });
-              },
-              icon: Icon(
-                fraction ? Icons.chevron_left_sharp : Icons.chevron_right_sharp,
-              ),
-              iconSize: 30,
-              color:
-                  widget.buttonIconColor ??
-                  Theme.of(context).colorScheme.tertiary,
-            ),
+              }
+            });
+          },
+          icon: Icon(
+            fraction ? Icons.chevron_left_sharp : Icons.chevron_right_sharp,
           ),
+          iconSize: 32,
+          color:
+              widget.buttonIconColor ??
+              Theme.of(context).colorScheme.onTertiaryContainer,
         ),
 
         if (fraction && _fractions.isNotEmpty ||
             !fraction && _decimals.isNotEmpty)
-          Material(
-            color: Colors.transparent,
-            child: Ink(
-              decoration: ShapeDecoration(
-                color:
-                    widget.buttonBackground ??
-                    Theme.of(context).colorScheme.tertiary,
-                shape: CircleBorder(),
-              ),
-              child: IconButton(
-                onPressed: () {},
-                onLongPress: () {
-                  setState(() {
-                    if (fraction) {
-                      if (_fractions.isNotEmpty) {
-                        if (_fractions.length == 1 && _decimals.isEmpty) return;
-                        _fractions.removeAt(0);
-                      }
-                    } else {
-                      if (_decimals.isNotEmpty) {
-                        if (_decimals.length == 1 && _fractions.isEmpty) return;
-                        _decimals.removeLast();
-                      }
-                    }
-                  });
+          IconButton.filledTonal(
+            onPressed: () {},
+            onLongPress: () {
+              setState(() {
+                if (fraction) {
+                  if (_fractions.isNotEmpty) {
+                    if (_fractions.length == 1 && _decimals.isEmpty) return;
+                    _fractions.removeAt(0);
+                  }
+                } else {
+                  if (_decimals.isNotEmpty) {
+                    if (_decimals.length == 1 && _fractions.isEmpty) return;
+                    _decimals.removeLast();
+                  }
+                }
+              });
 
-                  //Update value
-                  _triggerValueCallback();
-                },
-                icon: Icon(fraction ? Icons.chevron_right : Icons.chevron_left),
-                iconSize: 30,
-                color:
-                    widget.buttonIconColor ??
-                    Theme.of(context).colorScheme.onTertiary,
-              ),
-            ),
+              //Update value
+              _triggerValueCallback();
+            },
+            icon: Icon(fraction ? Icons.chevron_right : Icons.chevron_left),
+            iconSize: 32,
+            color:
+                widget.buttonIconColor ??
+                Theme.of(context).colorScheme.onTertiaryContainer,
+            highlightColor: Colors.red,
           ),
       ],
     );
@@ -330,6 +316,16 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     //Ensure we got the precision user selected
     result = num.parse(result.toStringAsFixed(_decimals.length));
 
+    return roundDouble(result, _decimals.length);
+  }
+
+  ///
+  /// Internal helper to ensure that decimals do not go bananas
+  num roundDouble(num number, int decimalPlaces) {
+    if(decimalPlaces == 0) return number.toInt();
+    number = number * pow(10, decimalPlaces);
+    int numInt = number.round();
+    num result = numInt / pow(10, decimalPlaces);
     return result;
   }
 
@@ -410,8 +406,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     }
 
     //If there are less decimals than the string, we add them (if not empty)
-    if (_decimals.length < decimalString.length /*&&
-        (_fractions.isNotEmpty || fraction != 0)*/) {
+    if (_decimals.length < decimalString.length &&
+        _decimals.length < widget.maxDecimals) {
       int add = decimalString.length - _decimals.length;
       for (int i = 0; i < add ; i++) {
         _decimals.add(0);
@@ -419,8 +415,11 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     }
 
     //Update decimals
-    for (int i = 0; i < decimalString.length; i++) {
-      _decimals[i] = num.tryParse(decimalString[i]) ?? 0;
+    if (_decimals.isNotEmpty) {
+      for (int i = decimalString.length - 1; i >= 0; i--) {
+        int pos = (_decimals.length - 1) - (decimalString.length - i - 1);
+        _decimals[pos] = num.tryParse(decimalString[i]) ?? 0;
+      }
     }
   }
 }

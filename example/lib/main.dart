@@ -103,15 +103,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text(_value.toString(), style: Theme.of(context).textTheme.headlineLarge),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: NumberPickerDynamic(
-                  initValue: _value,
-                  onValueChange: (value) {
-                    debugPrint("Value is $value");
-                    setState(() {
-                      _value = value;
-                    });
-                  },
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Container(
+                  color: Colors.red,
+                  child: NumberPickerDynamic(
+                    initValue: _value,
+                    onValueChange: (value) {
+                      debugPrint("Value is $value");
+                      setState(() {
+                        _value = value;
+                      });
+                    },
+                  ),
                 ),
               ),
               TextButton(onPressed: () {
