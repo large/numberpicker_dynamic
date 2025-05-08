@@ -16,7 +16,7 @@ import 'numberpicker_model.dart';
 /// items.
 class SingleNumberPicker extends StatefulWidget {
   /// The list of values to be displayed in the picker.
-  final List<num> values;
+  //final List<num> values;
 
   /// The text style to be used for the selected item.
   final TextStyle? selectedTextStyle;
@@ -37,7 +37,7 @@ class SingleNumberPicker extends StatefulWidget {
   final double perspective;
 
   /// The initial index of the selected item.
-  final int? initialSelectedIndex;
+  final int? initalValue;
 
   /// The decoration to be used for the selected item.
   final BoxDecoration? selectedItemDecoration;
@@ -60,17 +60,20 @@ class SingleNumberPicker extends StatefulWidget {
   /// Feedback if numberPosition is decimal
   final bool isDecimal;
 
+  /// Reverse or not
+  final bool reverse;
+
   /// Creates a new instance of the HorizontalPicker widget.
   const SingleNumberPicker({
     super.key,
-    required this.values,
+    //required this.values,
     required this.onValueSelected,
     this.selectedTextStyle,
     this.unselectedTextStyle,
     this.itemExtent = 80,
-    this.diameterRatio = 2.5,
+    this.diameterRatio = 1.7,
     this.perspective = 0.005,
-    this.initialSelectedIndex,
+    this.initalValue,
     this.selectedItemDecoration,
     this.unselectedItemDecoration,
     this.selectedItemPadding,
@@ -78,6 +81,7 @@ class SingleNumberPicker extends StatefulWidget {
     this.scrollDuration,
     required this.numberPosition,
     required this.isDecimal,
+    this.reverse = true,
   });
 
   @override
@@ -94,6 +98,9 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
 
   /// The notifier for the currently selected index.
   late ValueNotifier<int> _selectedIndexNotifier;
+
+  //Values to show, 0 to 9 is generated
+  List<int> values = List.generate(10, (value) => value);
 
   /// The current selection
   //int _currentIndex = -1;
@@ -120,8 +127,20 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   void initState() {
     super.initState();
 
+    //Reverse if set
+    if(widget.reverse) {
+      values = values.reversed.toList();
+    }
+
+    debugPrint("single: startValue ${widget.initalValue} - pos: ${widget.numberPosition}");
+
+    //Find index based on value
+    int startValue = widget.initalValue ?? 0;
+    startValue = values.indexWhere((value) => value == startValue);
+    if(startValue == -1) startValue = 0; //indexWhere returns -1 not found
+
     // Initialize the selected index notifier with the initial selected index.
-    _selectedIndexNotifier = ValueNotifier(widget.initialSelectedIndex ?? 0);
+    _selectedIndexNotifier = ValueNotifier(startValue);
 
     // Initialize the scroll controller with the initial selected index.
     _scrollController = FixedExtentScrollController(
@@ -148,7 +167,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   {
     widget.onValueSelected(
       NumberPickerPosition(
-        value: widget.values[_selectedIndexNotifier.value],
+        value: values[_selectedIndexNotifier.value],
         isDecimal: widget.isDecimal,
         position: widget.numberPosition,
       ),
@@ -191,7 +210,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
         ? widget.selectedTextStyle ??
             const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)
         : widget.unselectedTextStyle ??
-            const TextStyle(fontSize: 16, fontWeight: FontWeight.normal);
+            const TextStyle(fontSize: 26, fontWeight: FontWeight.normal);
   }
 
   /// Builds the HorizontalPicker widget.
@@ -199,9 +218,11 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   /// This method is called when the widget is inserted into the tree.
   @override
   Widget build(BuildContext context) {
+
     // Center the picker horizontally and vertically
     return Center(
       child: ListWheelScrollView.useDelegate(
+
         // Set the scroll controller for the picker
         controller: _scrollController,
         // Set the physics for the scroll view
@@ -226,7 +247,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
           // Build each item in the list
           builder: (context, index) {
             // Check if the index is out of range
-            if (index < 0 || index >= widget.values.length) return null;
+            if (index < 0 || index >= values.length) return null;
 
             return Center(
               child: ValueListenableBuilder(
@@ -236,6 +257,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
                 builder: (context, selectedIndex, child) {
                   // Check if the item is selected
                   final isSelected = index == selectedIndex;
+
                   return Container(
                     // Set the decoration and padding based on whether the item is selected
                     decoration:
@@ -248,7 +270,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
                             : widget.unSelectedItemPadding,
                     child: Text(
                       // Display the value of the item
-                      widget.values[index].toString(),
+                      values[index].toString(),
                       // Get the text style based on whether the item is selected
                       style: _getTextStyle(isSelected),
                       // Set the max lines and overflow for the text
@@ -261,7 +283,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
             );
           },
           // Set the child count for the list wheel scroll view
-          childCount: widget.values.length,
+          childCount: values.length,
         ),
       ),
     );

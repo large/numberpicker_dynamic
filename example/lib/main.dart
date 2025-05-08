@@ -1,38 +1,46 @@
+import 'package:example/expanedwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker_dynamic/numberpicker_dynamic.dart';
+
+import 'global.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    themeHandler.addListener(() {
+      setState(() {
+        debugPrint("Theme change");
+      });
+    });
+  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Dynamic Number Picker',
-      darkTheme: ThemeData.dark(useMaterial3: true),
-      themeMode: ThemeMode.dark,
+      themeMode: themeHandler.currentTheme(),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey, brightness: Brightness.dark),
+      ),
       theme: ThemeData(
         useMaterial3: true,
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlueAccent),
       ),
       home: const MyHomePage(title: 'Dynamic Number Picker'),
     );
@@ -58,7 +66,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  num _value = 48.4;
+  num _value = 123.456789;
+  final ScrollController _scrollController = ScrollController();
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +88,15 @@ class _MyHomePageState extends State<MyHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: [
+          IconButton(onPressed: () {
+            themeHandler.switchTheme();
+          }, icon: Icon(Icons.sunny)),
+        ],
       ),
       body: SafeArea(
-        child: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
+        child: SingleChildScrollView(
+          controller: _scrollController,
           child: Column(
             // Column is also a layout widget. It takes a list of children and
             // arranges them vertically. By default, it sizes itself to fit its
@@ -99,14 +114,16 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              Divider(),
               Center(
                 child: Text(_value.toString(), style: Theme.of(context).textTheme.headlineLarge),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: Container(
-                  color: Colors.red,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   child: NumberPickerDynamic(
+                    height: 190,
                     initValue: _value,
                     onValueChange: (value) {
                       debugPrint("Value is $value");
@@ -142,7 +159,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   if(_value<0) _value = 0;
                 });
 
-              }, child: Text("Decrease decimal"))
+              }, child: Text("Decrease decimal")),
+              Divider(),
+              ExpandedNumberPicker(onExpanded: () {
+                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                  //Scroll to the end
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent,
+                    duration: Duration(milliseconds: 250),
+                    curve: Curves.ease,
+                  );
+                });
+              },),
             ],
           ),
         ),

@@ -10,10 +10,10 @@ class NumberPickerDynamic extends StatefulWidget {
   const NumberPickerDynamic({
     super.key,
     required this.onValueChange,
-    this.itemHeight = 110,
-    this.itemWidth = double.infinity,
+    this.height = 110,
+    this.width = double.infinity,
     this.initValue = 0,
-    this.itemExtent = 50,
+    this.extent = 50,
     this.background,
     this.buttonBackground,
     this.buttonIconColor,
@@ -32,9 +32,9 @@ class NumberPickerDynamic extends StatefulWidget {
   final Color? buttonBackground;
   final Color? buttonIconColor;
   final num initValue;
-  final double itemHeight;
-  final double itemWidth;
-  final double itemExtent;
+  final double height;
+  final double width;
+  final double extent;
   final ValueChanged<num> onValueChange;
   final int maxDecimals;
   final int maxFractions;
@@ -52,7 +52,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   @override
   void initState() {
     super.initState();
-    createByNum(roundDouble(widget.initValue, widget.maxDecimals));
+    //createByNum(roundDouble(widget.initValue, widget.maxDecimals));
+    createByNum(widget.initValue);
   }
 
   @override
@@ -63,7 +64,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     //If the initValue is not the same, update it
     //This ensure that when setState is triggered a new value is stored
     if (oldWidget.initValue != widget.initValue) {
-      updateByNum(roundDouble(widget.initValue, widget.maxDecimals));
+      updateByNum(widget.initValue);
     }
   }
 
@@ -74,8 +75,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       minScaleFactor: 1.0,
       maxScaleFactor: 1.4,
       child: SizedBox(
-        height: widget.itemHeight,
-        width: widget.itemWidth,
+        height: widget.height,
+        width: widget.width,
         child: Center(
           child: ListView.builder(
             //To have center effect shrinkWrap needs to be true
@@ -83,7 +84,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
             scrollDirection: Axis.horizontal,
             controller: _scrollController,
             itemCount: _itemCount(),
-            itemExtent: widget.itemExtent,
+            itemExtent: widget.extent,
             itemBuilder: (context, i) {
               if (i == 0) {
                 return addFractionOrDecimal(fraction: true);
@@ -105,30 +106,16 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
                     Theme.of(context).textTheme.headlineLarge,
                 selectedTextStyle:
                     widget.textStyle ??
-                    Theme.of(context).textTheme.headlineLarge,
-                selectedItemPadding:
-                    widget.textPadding ?? EdgeInsets.all(widget.itemExtent / 5),
-                selectedItemDecoration:
-                    widget.textSelectDecoration ??
-                    BoxDecoration(
-                      color:
-                          _isDecimal(i)
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : Theme.of(
-                                context,
-                              ).colorScheme.secondaryContainer,
-                      border: Border.all(
-                        color:
-                            _isDecimal(i)
-                                ? Theme.of(context).colorScheme.inversePrimary
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.onSecondaryContainer,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
+                    Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                values: List.generate(10, (value) => value),
-                initialSelectedIndex: _indexToValue(i),
+                selectedItemPadding:
+                    widget.textPadding ?? EdgeInsets.all(widget.extent / 5),
+                unSelectedItemPadding:
+                  widget.textPadding ?? EdgeInsets.all(widget.extent / 5),
+                selectedItemDecoration: _getBoxDecoration(i),
+                unselectedItemDecoration: _getBoxDecoration(i),
+                initalValue: _indexToValue(i),
                 onValueSelected: (NumberPickerPosition value) {
                   debugPrint(
                     "${value.isDecimal ? "Decimal" : "Fraction"} from singlepicker ${value.value} at position ${value.position} - stored ${value.isDecimal ? _decimals[value.position] : _fractions[value.position]}",
@@ -154,8 +141,31 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     );
   }
 
+  ///
+  /// Internal helper for getting box decorations (used on both versions)
+  BoxDecoration _getBoxDecoration(int position) {
+    return widget.textSelectDecoration ??
+        BoxDecoration(
+          color:
+              _isDecimal(position)
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.secondaryContainer,
+          border: Border.all(
+            color:
+                _isDecimal(position)
+                    ? Theme.of(context).colorScheme.inversePrimary
+                    : Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        );
+  }
+
+  ///
+  /// Internal helper for trigger callback to parent, but do it after frameback is OK
   void _triggerValueCallback() {
-    widget.onValueChange(getNum());
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      widget.onValueChange(getNum());
+    });
   }
 
   ///
@@ -235,40 +245,41 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       children: [
         if (fraction && _fractions.length < widget.maxFractions ||
             !fraction && _decimals.length < widget.maxDecimals)
-        IconButton.filled(
-          onPressed: () {
-            setState(() {
-              if (fraction) {
-                if(_fractions.length < widget.maxFractions) _fractions.insert(0, 0);
-              } else {
-                if(_decimals.length < widget.maxDecimals) _decimals.add(0);
+          IconButton.filled(
+            onPressed: () {
+              setState(() {
+                if (fraction) {
+                  if (_fractions.length < widget.maxFractions) {
+                    _fractions.insert(0, 0);
+                  }
+                } else {
+                  if (_decimals.length < widget.maxDecimals) _decimals.add(0);
 
-                //Do scrolling after frame is finished
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  //Scroll to the end
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: Duration(milliseconds: 250),
-                    curve: Curves.ease,
-                  );
-                });
-              }
-            });
-          },
-          icon: Icon(
-            fraction ? Icons.chevron_left_sharp : Icons.chevron_right_sharp,
+                  //Do scrolling after frame is finished
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    //Scroll to the end
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: Duration(milliseconds: 250),
+                      curve: Curves.ease,
+                    );
+                  });
+                }
+              });
+            },
+            icon: Icon(
+              fraction ? Icons.chevron_left_sharp : Icons.chevron_right_sharp,
+            ),
+            iconSize: 30,
+            color:
+                widget.buttonIconColor ??
+                Theme.of(context).colorScheme.onTertiaryContainer,
           ),
-          iconSize: 32,
-          color:
-              widget.buttonIconColor ??
-              Theme.of(context).colorScheme.onTertiaryContainer,
-        ),
 
         if (fraction && _fractions.isNotEmpty ||
             !fraction && _decimals.isNotEmpty)
           IconButton.filledTonal(
-            onPressed: () {},
-            onLongPress: () {
+            onPressed: () {
               setState(() {
                 if (fraction) {
                   if (_fractions.isNotEmpty) {
@@ -287,7 +298,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
               _triggerValueCallback();
             },
             icon: Icon(fraction ? Icons.chevron_right : Icons.chevron_left),
-            iconSize: 32,
+            iconSize: 30,
             color:
                 widget.buttonIconColor ??
                 Theme.of(context).colorScheme.onTertiaryContainer,
@@ -322,7 +333,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   ///
   /// Internal helper to ensure that decimals do not go bananas
   num roundDouble(num number, int decimalPlaces) {
-    if(decimalPlaces == 0) return number.toInt();
+    if (decimalPlaces == 0) return number.toInt();
     number = number * pow(10, decimalPlaces);
     int numInt = number.round();
     num result = numInt / pow(10, decimalPlaces);
@@ -333,23 +344,21 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   /// Creates fraction & decimals based on 10th position
   void createByNum(num value) {
     int fraction = value.toInt();
-    List<String> decimalStringArray = value.toString().split('.');
-    int decimals =
-        int.tryParse(
-          decimalStringArray.length < 2 ? "" : decimalStringArray[1],
-        ) ??
-        0;
     String fractionString = fraction.toString();
     for (int i = 0; i < fractionString.length; i++) {
       _fractions.add(num.tryParse(fractionString[i]) ?? 0);
     }
 
+    List<String> decimalStringArray = value.toString().split('.');
+    String decimalString =
+        decimalStringArray.length < 2 ? "" : decimalStringArray[1];
+    int decimalAsNumber = int.tryParse(decimalString) ?? 0;
+
     //If decimals are zero, we just ignore
-    if (decimals == 0) {
+    if (decimalAsNumber == 0) {
       return;
     }
 
-    String decimalString = decimals.toString();
     for (int i = 0; i < decimalString.length; i++) {
       _decimals.add(num.tryParse(decimalString[i]) ?? 0);
     }
@@ -359,15 +368,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   /// Update existing data with new value
   void updateByNum(num value) {
     //Do same checks as in the createNum(...)
+    ///// Fraction part
     int fraction = value.toInt();
-    List<String> decimalStringArray = value.toString().split('.');
-    num decimals =
-        num.tryParse(
-          decimalStringArray.length < 2 ? "" : decimalStringArray[1],
-        ) ??
-        0;
-
-    String decimalString = decimals.toString();
     String fractionString = fraction.toString();
 
     //If there are less fractions than the string, we add them (if not empty)
@@ -380,12 +382,11 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     }
 
     //If there are more fractions than the string, we zero the first items
-    if(_fractions.length > fractionString.length)
-      {
-        for (int i = 0; i < _fractions.length - fractionString.length; i++) {
-          _fractions[i] = 0;
-        }
-     }
+    if (_fractions.length > fractionString.length) {
+      for (int i = 0; i < _fractions.length - fractionString.length; i++) {
+        _fractions[i] = 0;
+      }
+    }
 
     //Update fractions
     //There can be zero in the beginning of this array that we want to keep.
@@ -397,29 +398,46 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       }
     }
 
+    ///// Decimal part
+    //Get decimal as string + number (string needs to be a copy
+    List<String> decimalStringArray = value.toString().split('.');
+    String decimalString =
+        decimalStringArray.length < 2 ? "" : decimalStringArray[1];
+    num decimalAsNumber = num.tryParse(decimalString) ?? 0;
+
     //If decimals are zero, we are finished
-    if (decimals == 0) {
-      for(int i=0;i<_decimals.length;i++) {
+    if (decimalAsNumber == 0) {
+      for (int i = 0; i < _decimals.length; i++) {
         _decimals[i] = 0;
       }
       return;
+    }
+
+    //If the string is long, round it to max decimals and notify parents
+    if (decimalString.length > widget.maxDecimals) {
+      decimalAsNumber = roundDouble(value, widget.maxDecimals);
+      decimalString = decimalAsNumber.toString().split('.')[1];
+      _triggerValueCallback();
     }
 
     //If there are less decimals than the string, we add them (if not empty)
     if (_decimals.length < decimalString.length &&
         _decimals.length < widget.maxDecimals) {
       int add = decimalString.length - _decimals.length;
-      for (int i = 0; i < add ; i++) {
+      for (int i = 0; i < add; i++) {
         _decimals.add(0);
       }
     }
 
     //Update decimals
     if (_decimals.isNotEmpty) {
-      for (int i = decimalString.length - 1; i >= 0; i--) {
-        int pos = (_decimals.length - 1) - (decimalString.length - i - 1);
-        _decimals[pos] = num.tryParse(decimalString[i]) ?? 0;
+      for (int i = 0; i < decimalString.length; i++) {
+        _decimals[i] = num.tryParse(decimalString[i]) ?? 0;
       }
+      //for (int i = decimalString.length - 1; i >= 0; i--) {
+      //  int pos = (_decimals.length - 1) - (decimalString.length - i - 1);
+      //  _decimals[pos] = num.tryParse(decimalString[i]) ?? 0;
+      //}
     }
   }
 }
