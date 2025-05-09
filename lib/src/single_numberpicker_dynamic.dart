@@ -6,18 +6,8 @@ import 'package:flutter/material.dart';
 
 import 'numberpicker_model.dart';
 
-/// A horizontal picker widget that allows users to select a value from a list.
-///
-/// The picker displays a list of values in a horizontal layout, with the selected
-/// value highlighted. The user can scroll through the list to select a different value.
-///
-/// The widget provides a range of customization options, including the ability to
-/// specify the text style, decoration, and padding for the selected and unselected
-/// items.
+/// A vertical number picker widget that allows users to select number 0 to 9
 class SingleNumberPicker extends StatefulWidget {
-  /// The list of values to be displayed in the picker.
-  //final List<num> values;
-
   /// The text style to be used for the selected item.
   final TextStyle? selectedTextStyle;
 
@@ -63,7 +53,7 @@ class SingleNumberPicker extends StatefulWidget {
   /// Reverse or not
   final bool reverse;
 
-  /// Creates a new instance of the HorizontalPicker widget.
+  /// Creates a new instance of the SingleNumberPicker widget.
   const SingleNumberPicker({
     super.key,
     //required this.values,
@@ -88,9 +78,9 @@ class SingleNumberPicker extends StatefulWidget {
   State<SingleNumberPicker> createState() => _SingleNumberPickerState();
 }
 
-/// The state class for the HorizontalPicker widget.
+/// The state class for the SingleNumberPicker widget.
 ///
-/// This class manages the state of the HorizontalPicker widget, including the
+/// This class manages the state of the SingleNumberPicker widget, including the
 /// scroll controller, selected index notifier, and text style.
 class _SingleNumberPickerState extends State<SingleNumberPicker> {
   /// The scroll controller for the ListWheelScrollView.
@@ -102,37 +92,15 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   //Values to show, 0 to 9 is generated
   List<int> values = List.generate(10, (value) => value);
 
-  /// The current selection
-  //int _currentIndex = -1;
-
-  /*@override
-  void didUpdateWidget(covariant SingleNumberPicker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    //Update selection on change
-    /*if ( (oldWidget.initialSelectedIndex != widget.initialSelectedIndex ||
-        widget.initialSelectedIndex == 0)
-        ) {
-      debugPrint("Jalalalal");
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollController.jumpToItem(widget.initialSelectedIndex ?? 0);
-      });
-    }*/
-  }*/
-
   @override
-  /// Initializes the state of the HorizontalPicker widget.
-  ///
-  /// This method is called when the widget is inserted into the tree.
+  /// Initializes the state of the SingleNumberPicker widget.
   void initState() {
-    super.initState();
-
-    //Reverse if set
+    //Reverse numbers if set (normal behaviour)
     if(widget.reverse) {
       values = values.reversed.toList();
     }
 
-    debugPrint("single: startValue ${widget.initalValue} - pos: ${widget.numberPosition}");
+    //debugPrint("single: startValue ${widget.initalValue} - pos: ${widget.numberPosition}");
 
     //Find index based on value
     int startValue = widget.initalValue ?? 0;
@@ -145,20 +113,11 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
     // Initialize the scroll controller with the initial selected index.
     _scrollController = FixedExtentScrollController(
       initialItem: _selectedIndexNotifier.value,
+      onAttach: onScrollAttach,
+      onDetach: onScrollDetach,
     );
 
-    //Store current value
-    //_currentIndex = _selectedIndexNotifier.value;
-
-    // Add a post-frame callback to notify the parent widget of the initial selected value.
-    /*WidgetsBinding.instance.addPostFrameCallback((_) {
-    });*/
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      //Ensure to trigger when scrolling has stopped
-      _scrollController.position.isScrollingNotifier.addListener(scrollStopped);
-      //_triggerValueSelected();
-    });
+    super.initState();
   }
 
   ///
@@ -179,13 +138,12 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
   void scrollStopped()
   {
     if(!_scrollController.position.isScrollingNotifier.value) {
-      //debugPrint('scroll is stopped');
       _triggerValueSelected();
     }
   }
 
   @override
-  /// Disposes of the resources used by the HorizontalPicker widget.
+  /// Disposes of the resources used by the SingleNumberPicker widget.
   ///
   /// This method is called when the widget is removed from the tree.
   void dispose() {
@@ -213,7 +171,7 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
             const TextStyle(fontSize: 26, fontWeight: FontWeight.normal);
   }
 
-  /// Builds the HorizontalPicker widget.
+  /// Builds the SingleNumberPicker widget.
   ///
   /// This method is called when the widget is inserted into the tree.
   @override
@@ -287,5 +245,16 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
         ),
       ),
     );
+  }
+
+  /// Scrollcontroller onAttach() function, ensure that we are getting scrolldata
+  void onScrollAttach(ScrollPosition sp) {
+    //_scrollController.position.isScrollingNotifier.addListener(scrollStopped);
+    sp.isScrollingNotifier.addListener(scrollStopped);
+  }
+
+  /// Scrollcontroller onDetach() function, ensure free memory for the callback
+  void onScrollDetach(ScrollPosition sp) {
+    sp.isScrollingNotifier.removeListener(scrollStopped);
   }
 }

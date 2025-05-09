@@ -1,4 +1,6 @@
-//Return value from each numberpicker
+/// Class that return value from each numberpicker
+library;
+
 class NumberPickerPosition {
   const NumberPickerPosition({
     required this.isDecimal,

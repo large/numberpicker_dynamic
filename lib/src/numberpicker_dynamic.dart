@@ -1,11 +1,9 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:numberpicker_dynamic/numberpicker_dynamic.dart';
-
 import 'numberpicker_model.dart';
 
-///Main widget for creating all widgets
+///Main widget for creating a complete numberpicker
 class NumberPickerDynamic extends StatefulWidget {
   const NumberPickerDynamic({
     super.key,
@@ -13,36 +11,61 @@ class NumberPickerDynamic extends StatefulWidget {
     this.height = 110,
     this.width = double.infinity,
     this.initValue = 0,
-    this.extent = 50,
-    this.background,
+    this.itemExtent = 50,
+    this.maxDecimals = 6,
+    this.maxFractions = 12,
+    this.valueChangeOnDecimalOverflow = true,
     this.buttonBackground,
     this.buttonIconColor,
     this.textStyle,
     this.textPadding,
     this.textSelectDecoration,
-    this.maxDecimals = 6,
-    this.maxFractions = 12,
   });
 
+  /// Override text style for each number
   final TextStyle? textStyle;
+
+  /// Override padding for each number
   final EdgeInsets? textPadding;
+
+  /// Override box decoration for each number
   final BoxDecoration? textSelectDecoration;
 
-  final Color? background;
+  /// Background color for button for + / - numbers
   final Color? buttonBackground;
+
+  /// Icon color on button for + / - numbers
   final Color? buttonIconColor;
+
+  /// Initial value of item
   final num initValue;
+
+  /// Height of widget, defaults: 110
   final double height;
+
+  /// Width of SizeBox around widget, defaults: double.inifity
   final double width;
-  final double extent;
+
+  /// Listview itemExtent between each number
+  final double itemExtent;
+
+  /// Callback to parent when data is changing
   final ValueChanged<num> onValueChange;
+
+  /// Max number of decimals, limited by double maxvalue
   final int maxDecimals;
+
+  /// Max fractions (whole number) allowed, limited by double maxvalue
   final int maxFractions;
+
+  /// Gives onValueChange trigger if data is being rounded in widget
+  final bool valueChangeOnDecimalOverflow;
 
   @override
   State<NumberPickerDynamic> createState() => _NumberPickerDynamicState();
 }
 
+/// Stateclass for NumberPickerDynamic
 class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   final List<num> _fractions = List<num>.empty(growable: true);
   final List<num> _decimals = List<num>.empty(growable: true);
@@ -52,7 +75,6 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   @override
   void initState() {
     super.initState();
-    //createByNum(roundDouble(widget.initValue, widget.maxDecimals));
     createByNum(widget.initValue);
   }
 
@@ -63,6 +85,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
 
     //If the initValue is not the same, update it
     //This ensure that when setState is triggered a new value is stored
+    //Typical where parent sets new data
     if (oldWidget.initValue != widget.initValue) {
       updateByNum(widget.initValue);
     }
@@ -70,7 +93,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
 
   @override
   Widget build(BuildContext context) {
-    //Set textscale to max 40% oversize
+    //Set textscale to max 40% oversize (handle zoom/textsize accesibility)
     return MediaQuery.withClampedTextScaling(
       minScaleFactor: 1.0,
       maxScaleFactor: 1.4,
@@ -84,7 +107,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
             scrollDirection: Axis.horizontal,
             controller: _scrollController,
             itemCount: _itemCount(),
-            itemExtent: widget.extent,
+            itemExtent: widget.itemExtent,
             itemBuilder: (context, i) {
               if (i == 0) {
                 return addFractionOrDecimal(fraction: true);
@@ -110,29 +133,27 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
                       fontWeight: FontWeight.bold,
                     ),
                 selectedItemPadding:
-                    widget.textPadding ?? EdgeInsets.all(widget.extent / 5),
+                    widget.textPadding ?? EdgeInsets.all(widget.itemExtent / 5),
                 unSelectedItemPadding:
-                  widget.textPadding ?? EdgeInsets.all(widget.extent / 5),
+                    widget.textPadding ?? EdgeInsets.all(widget.itemExtent / 5),
                 selectedItemDecoration: _getBoxDecoration(i),
                 unselectedItemDecoration: _getBoxDecoration(i),
                 initalValue: _indexToValue(i),
                 onValueSelected: (NumberPickerPosition value) {
-                  debugPrint(
-                    "${value.isDecimal ? "Decimal" : "Fraction"} from singlepicker ${value.value} at position ${value.position} - stored ${value.isDecimal ? _decimals[value.position] : _fractions[value.position]}",
-                  );
+                  //debugPrint(
+                  //  "${value.isDecimal ? "Decimal" : "Fraction"} from singlepicker ${value.value} at position ${value.position} - stored ${value.isDecimal ? _decimals[value.position] : _fractions[value.position]}",
+                  //);
                   if (value.isDecimal) {
                     _decimals[value.position] = value.value;
                   } else {
                     _fractions[value.position] = value.value;
                   }
 
+                  //Trigger setState
                   _triggerValueCallback();
                 },
                 numberPosition: _positionHelper(i),
-                //(i < _fractions.length + 1) ? (i - 1) : i - _fractions.length - 2,
-                isDecimal: _isDecimal(
-                  i,
-                ), //i < _fractions.length + 1) ? false : true,
+                isDecimal: _isDecimal(i),
               );
             },
           ),
@@ -197,7 +218,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     }
   }
 
-  //Helper to get value based on position
+  ///
+  /// Helper to get value based on position
   int _indexToValue(int position) {
     if (position <= _fractions.length + 1) {
       int v = _fractions[position - 1].toInt();
@@ -326,7 +348,6 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
 
     //Ensure we got the precision user selected
     result = num.parse(result.toStringAsFixed(_decimals.length));
-
     return roundDouble(result, _decimals.length);
   }
 
@@ -359,6 +380,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       return;
     }
 
+    //Create decimals base on string
     for (int i = 0; i < decimalString.length; i++) {
       _decimals.add(num.tryParse(decimalString[i]) ?? 0);
     }
@@ -414,7 +436,8 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
     }
 
     //If the string is long, round it to max decimals and notify parents
-    if (decimalString.length > widget.maxDecimals) {
+    if (decimalString.length > widget.maxDecimals &&
+        widget.valueChangeOnDecimalOverflow) {
       decimalAsNumber = roundDouble(value, widget.maxDecimals);
       decimalString = decimalAsNumber.toString().split('.')[1];
       _triggerValueCallback();
@@ -434,10 +457,6 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
       for (int i = 0; i < decimalString.length; i++) {
         _decimals[i] = num.tryParse(decimalString[i]) ?? 0;
       }
-      //for (int i = decimalString.length - 1; i >= 0; i--) {
-      //  int pos = (_decimals.length - 1) - (decimalString.length - i - 1);
-      //  _decimals[pos] = num.tryParse(decimalString[i]) ?? 0;
-      //}
     }
   }
 }
