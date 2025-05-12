@@ -1,7 +1,7 @@
 name: numberpicker_dynamic
 description: "Flexible numberpicker for phones and tablet"
 version: 0.0.2
-homepage: https://github.com/large/numberpicker_dynamic
+homepage: "https://github.com/large/numberpicker_dynamic"
 
 environment:
   sdk: ^3.7.2
