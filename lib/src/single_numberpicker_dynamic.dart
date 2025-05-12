@@ -61,7 +61,7 @@ class SingleNumberPicker extends StatefulWidget {
     this.unselectedTextStyle,
     this.itemExtent = 80,
     this.diameterRatio = 1.7,
-    this.perspective = 0.005,
+    this.perspective = 0.007,
     this.initalValue,
     this.selectedItemDecoration,
     this.unselectedItemDecoration,

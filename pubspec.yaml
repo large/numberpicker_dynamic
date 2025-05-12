@@ -1,7 +1,7 @@
 name: numberpicker_dynamic
 description: "Flexible numberpicker for phones and tablet"
-version: 0.0.1
-homepage:
+version: 0.0.2
+homepage: https://github.com/large/numberpicker_dynamic
 
 environment:
   sdk: ^3.7.2
@@ -21,7 +21,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # To add assets to your package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

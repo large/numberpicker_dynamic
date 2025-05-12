@@ -11,9 +11,12 @@ class NumberPickerDynamic extends StatefulWidget {
     this.height = 110,
     this.width = double.infinity,
     this.initValue = 0,
-    this.itemExtent = 50,
+    this.listItemExtent = 45,
+    this.itemExtent = 55,
     this.maxDecimals = 6,
     this.maxFractions = 12,
+    this.diameterRatio = 1.3,
+    this.perspective = 0.005,
     this.valueChangeOnDecimalOverflow = true,
     this.buttonBackground,
     this.buttonIconColor,
@@ -49,6 +52,9 @@ class NumberPickerDynamic extends StatefulWidget {
   /// Listview itemExtent between each number
   final double itemExtent;
 
+  /// Listview itemExtent between each number in listView (horizontal)
+  final double listItemExtent;
+
   /// Callback to parent when data is changing
   final ValueChanged<num> onValueChange;
 
@@ -60,6 +66,12 @@ class NumberPickerDynamic extends StatefulWidget {
 
   /// Gives onValueChange trigger if data is being rounded in widget
   final bool valueChangeOnDecimalOverflow;
+
+  /// The diameter ratio of the picker.
+  final double diameterRatio;
+
+  /// The perspective of the picker.
+  final double perspective;
 
   @override
   State<NumberPickerDynamic> createState() => _NumberPickerDynamicState();
@@ -107,7 +119,7 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
             scrollDirection: Axis.horizontal,
             controller: _scrollController,
             itemCount: _itemCount(),
-            itemExtent: widget.itemExtent,
+            itemExtent: widget.listItemExtent,
             itemBuilder: (context, i) {
               if (i == 0) {
                 return addFractionOrDecimal(fraction: true);
@@ -124,6 +136,9 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
               }
               return SingleNumberPicker(
                 key: ValueKey(_keyName(i)),
+                perspective: widget.perspective,
+                diameterRatio: widget.diameterRatio,
+                itemExtent: widget.itemExtent,
                 unselectedTextStyle:
                     widget.textStyle ??
                     Theme.of(context).textTheme.headlineLarge,
@@ -133,9 +148,9 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
                       fontWeight: FontWeight.bold,
                     ),
                 selectedItemPadding:
-                    widget.textPadding ?? EdgeInsets.all(widget.itemExtent / 5),
+                    widget.textPadding ?? EdgeInsets.all(widget.listItemExtent / 5),
                 unSelectedItemPadding:
-                    widget.textPadding ?? EdgeInsets.all(widget.itemExtent / 5),
+                    widget.textPadding ?? EdgeInsets.all(widget.listItemExtent / 5),
                 selectedItemDecoration: _getBoxDecoration(i),
                 unselectedItemDecoration: _getBoxDecoration(i),
                 initalValue: _indexToValue(i),
