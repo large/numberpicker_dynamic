@@ -99,8 +99,6 @@ class _SingleNumberPickerState extends State<SingleNumberPicker> {
       values = values.reversed.toList();
     }
 
-    //debugPrint("single: startValue ${widget.initalValue} - pos: ${widget.numberPosition}");
-
     //Find index based on value
     int startValue = widget.initalValue ?? 0;
     startValue = values.indexWhere((value) => value == startValue);

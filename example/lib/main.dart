@@ -21,7 +21,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     themeHandler.addListener(() {
       setState(() {
-        debugPrint("Theme change");
+        debugPrint("Theme change triggered");
       });
     });
   }
@@ -35,7 +35,10 @@ class _MyAppState extends State<MyApp> {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey, brightness: Brightness.dark),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueGrey,
+          brightness: Brightness.dark,
+        ),
       ),
       theme: ThemeData(
         useMaterial3: true,
@@ -66,10 +69,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  num _value = 123.456789;
+  num _value = 123;
   final ScrollController _scrollController = ScrollController();
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -89,9 +90,12 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
         actions: [
-          IconButton(onPressed: () {
-            themeHandler.switchTheme();
-          }, icon: Icon(Icons.sunny)),
+          IconButton(
+            onPressed: () {
+              themeHandler.switchTheme();
+            },
+            icon: Icon(Icons.sunny),
+          ),
         ],
       ),
       body: SafeArea(
@@ -114,9 +118,18 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Divider(),
-              Center(
-                child: Text(_value.toString(), style: Theme.of(context).textTheme.headlineLarge),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Callback value:",
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  Text(
+                    _value.toString(),
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -134,43 +147,65 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-              TextButton(onPressed: () {
-                setState(() {
-                  _value++;
-                });
-
-              }, child: Text("Increase the value higher")),
-              TextButton(onPressed: () {
-                setState(() {
-                  _value--;
-                  if(_value<0) _value = 0;
-                });
-
-              }, child: Text("Decrease the value lower")),
-              TextButton(onPressed: () {
-                setState(() {
-                  _value+=0.1;
-                });
-
-              }, child: Text("Increase decimal")),
-              TextButton(onPressed: () {
-                setState(() {
-                  _value-=0.1;
-                  if(_value<0) _value = 0;
-                });
-
-              }, child: Text("Decrease decimal")),
+              Center(
+                child: Text(
+                  "Value by setState()",
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _value++;
+                  });
+                },
+                child: Text("Increase the value higher (+1)"),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _value--;
+                    if (_value < 0) _value = 0;
+                  });
+                },
+                child: Text("Decrease the value lower (-1)"),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _value += 0.1;
+                  });
+                },
+                child: Text("Increase decimal (+0.1)"),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _value -= 0.1;
+                    if (_value < 0) _value = 0;
+                  });
+                },
+                child: Text("Decrease decimal (-0.1)"),
+              ),
               Divider(),
-              ExpandedNumberPicker(onExpanded: () {
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  //Scroll to the end
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: Duration(milliseconds: 250),
-                    curve: Curves.ease,
-                  );
-                });
-              },),
+              Center(
+                child: Text(
+                  "Example of build-in widget",
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+              ),
+              ExpandedNumberPicker(
+                onExpanded: () {
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    //Scroll to the end
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: Duration(milliseconds: 250),
+                      curve: Curves.ease,
+                    );
+                  });
+                },
+              ),
             ],
           ),
         ),

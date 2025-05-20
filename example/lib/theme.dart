@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 
-class ThemeHandler with ChangeNotifier
-{
-    bool _isDark = false;
+///Theme handler is used to switch between light and dark theme
+class ThemeHandler with ChangeNotifier {
+  bool _isDark = false;
 
-    ThemeMode currentTheme()
-    {
-      return _isDark ? ThemeMode.dark : ThemeMode.light;
-    }
+  ThemeMode currentTheme() {
+    return _isDark ? ThemeMode.dark : ThemeMode.light;
+  }
 
-    void switchTheme()
-    {
-        _isDark=!_isDark;
-        notifyListeners();
-    }
+  void switchTheme() {
+    _isDark = !_isDark;
+    notifyListeners();
+  }
 }

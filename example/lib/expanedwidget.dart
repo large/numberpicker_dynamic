@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:numberpicker_dynamic/numberpicker_dynamic.dart';
 
+///Example of own widget with textfield and numberpicker
 class ExpandedNumberPicker extends StatefulWidget {
   const ExpandedNumberPicker({super.key, required this.onExpanded});
 
@@ -12,18 +13,20 @@ class ExpandedNumberPicker extends StatefulWidget {
 }
 
 class _ExpandedNumberPickerState extends State<ExpandedNumberPicker> {
+  ///Text editing controller for the text field + focusHandling
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
-  num _value = 480.3;
+  //Static value at startup
+  num _value = 123;
 
   //How the text field will look
-  InputDecoration textFieldDecoration(String text, String suffix) {
+  InputDecoration textFieldDecoration(String hintText, String suffix) {
     return InputDecoration(
       //border: const OutlineInputBorder(),
       labelStyle: Theme.of(context).textTheme.titleMedium,
-      suffixText: " [$suffix]",
-      hintText: text,
+      suffixText: suffix.isEmpty ? null : " [$suffix]",
+      hintText: hintText,
       contentPadding: const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
     );
   }
@@ -31,6 +34,8 @@ class _ExpandedNumberPickerState extends State<ExpandedNumberPicker> {
   @override
   void initState() {
     super.initState();
+
+    //Set the initial value in the text field after first frame is set
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _textController.text = _value.toString();
     });
@@ -50,7 +55,7 @@ class _ExpandedNumberPickerState extends State<ExpandedNumberPicker> {
               Padding(
                 padding: const EdgeInsets.only(left: 8.0, right: 8),
                 child: Text(
-                  "Number: ",
+                  "Value: ",
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
@@ -65,22 +70,31 @@ class _ExpandedNumberPickerState extends State<ExpandedNumberPicker> {
                       _value = num.tryParse(text.replaceAll(",", ".")) ?? 0;
                     });
                   },
-                  textInputAction: TextInputAction.done,
+                  textInputAction: TextInputAction.send,
                   keyboardType: const TextInputType.numberWithOptions(
                     signed: false,
                     decimal: true,
                   ),
-                  decoration: textFieldDecoration("push for number", "suffix"),
+                  decoration: textFieldDecoration("Push for number", ""),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                      RegExp(r'(^-?\d*[\.\,]?\d{0,5})'),
+                      RegExp(r'(^-?\d*[.,]?\d{0,5})'),
                     ),
                   ],
                 ),
               ),
+              //Show icon to close the keyboard (for iOS users)
+              if(_focusNode.hasFocus /*&& Theme.of(context).platform == TargetPlatform.iOS*/)
+                IconButton.filledTonal(
+                  onPressed: () {
+                    FocusScope.of(context).unfocus();
+                  },
+                  icon: const Icon(Icons.check),
+                ),
             ],
           ),
           children: [
+            //GestureDetector removes focus from textfield when tapped
             NumberPickerDynamic(
               height: 100,
               maxDecimals: 5,
@@ -95,10 +109,10 @@ class _ExpandedNumberPickerState extends State<ExpandedNumberPicker> {
             ),
           ],
           onExpansionChanged: (expanded) {
-            if(expanded) {
-             Future.delayed(Duration(milliseconds: 250), () {
-               widget.onExpanded();
-             });
+            if (expanded) {
+              Future.delayed(Duration(milliseconds: 250), () {
+                widget.onExpanded();
+              });
             }
           },
         ),

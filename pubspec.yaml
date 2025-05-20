@@ -1,6 +1,6 @@
 name: numberpicker_dynamic
-description: "Flexible numberpicker for phones and tablet"
-version: 0.0.2
+description: "Flexible number picker with decimal handling"
+version: 0.5.0
 homepage: "https://github.com/large/numberpicker_dynamic"
 
 environment:

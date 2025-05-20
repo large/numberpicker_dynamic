@@ -155,9 +155,6 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
                 unselectedItemDecoration: _getBoxDecoration(i),
                 initalValue: _indexToValue(i),
                 onValueSelected: (NumberPickerPosition value) {
-                  //debugPrint(
-                  //  "${value.isDecimal ? "Decimal" : "Fraction"} from singlepicker ${value.value} at position ${value.position} - stored ${value.isDecimal ? _decimals[value.position] : _fractions[value.position]}",
-                  //);
                   if (value.isDecimal) {
                     _decimals[value.position] = value.value;
                   } else {
@@ -238,13 +235,11 @@ class _NumberPickerDynamicState extends State<NumberPickerDynamic> {
   int _indexToValue(int position) {
     if (position <= _fractions.length + 1) {
       int v = _fractions[position - 1].toInt();
-      //debugPrint("v is $v at position $position");
       return v;
     }
 
     if (position > _fractions.length + 1) {
       int v = _decimals[position - _fractions.length - 2].toInt();
-      //debugPrint("v decimal is $v at position $position");
       return v;
     }
 
