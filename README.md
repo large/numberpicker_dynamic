@@ -1,9 +1,6 @@
 # Number picker dynamic
 Number picker dynamic is a code lock inspired design to use for large numbers and decimals.
 
-## How it looks
-TODO: Edit to link media in here
-
 ## Features
 - Turn dials to select each number and decimals
 - Auto rounded values to handle decimals fractions
@@ -15,9 +12,49 @@ TODO: Edit to link media in here
 |-------------|---------|-----|-------|-------|-----|---------|
 | **Support** | Yes     | Yes | No    | No    | No  | No      |
 
+## How it looks
+Normal mode:
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/1.png"/>
+
+Dark mode:
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/2.png"/>
+
+Large number:
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/3.png"/>
+
+Small number (decimals):
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/4.png"/>
+
+Large number with a lot of decimals (scrollable):
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/5.png"/>
+
+Integrated into other widgets:
+
+<img src="https://raw.githubusercontent.com/large/numberpicker_dynamic/master/media/6.png"/>
+
+<details open="" class="details-reset border rounded-2">
+  <summary class="px-3 py-2 border-bottom">
+    <svg aria-hidden="true" viewBox="0 0 16 16" version="1.1" data-view-component="true" height="16" width="16" class="octicon octicon-device-camera-video">
+    <path fill-rule="evenodd" d="..."></path>
+</svg>
+    <span aria-label="Number Picker Dynamic video" class="m-1">Number Picker Dynamic live</span>
+    <span class="dropdown-caret"></span>
+  </summary>
+
+  <video name="" src="https://github.com/user-attachments/assets/c20ae87f-54ad-4a5c-bc02-2fb1c1b89858" data-canonical-src="https://github.com/user-attachments/assets/c20ae87f-54ad-4a5c-bc02-2fb1c1b89858" controls="controls" muted="muted" class="d-block rounded-bottom-2 width-fit" style="max-height:800px;">
+    <title>Hest</title>
+  </video>
+</details>
+
 ## Usage
 
 NumberPickerDynamic only require option `onValueChange` callback to be set.
+
 `onValueChange` returns the current value of the number picker.
 
 ```dart
